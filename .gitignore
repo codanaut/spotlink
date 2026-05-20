@@ -1,0 +1,12 @@
+# Rust compilation artifacts
+/target/
+
+# Node/Frontend dependencies
+**/node_modules/
+**/dist/
+**/.svelte-kit/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+*.log
