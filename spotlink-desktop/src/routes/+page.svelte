@@ -121,10 +121,10 @@
 
 <main class="container">
   <header class="control-panel">
-    <h1>SpotLink</h1>
+    <h1 class="title">SpotLink</h1>
 
-    <div class="input-group">
-      {#if !activeTrackingCallsign}
+    {#if !activeTrackingCallsign}
+      <div class="input-group">
         <input
           type="text"
           placeholder="Enter Callsign (e.g. KF0TPL)"
@@ -134,14 +134,21 @@
         <button on:click={handleStartTracking} class="btn-start"
           >Track Stream</button
         >
-      {:else}
+      </div>
+    {:else}
+      <div class="active-group">
+        <div class="spacer"></div>
+
         <div class="status-indicator">
           Listening to: <span class="active-call">{activeTrackingCallsign}</span
           >
         </div>
-        <button on:click={handleStopTracking} class="btn-stop">Stop</button>
-      {/if}
-    </div>
+
+        <div class="button-wrapper">
+          <button on:click={handleStopTracking} class="btn-stop">Stop</button>
+        </div>
+      </div>
+    {/if}
   </header>
 
   {#if activeTrackingCallsign}
@@ -243,10 +250,11 @@
     border: 1px solid #29292e;
   }
 
-  .control-panel h1 {
-    margin: 0 0 15px 0;
-    font-size: 1.5rem;
-    color: #00b37e;
+  .title {
+    text-align: center;
+    margin: 0 0 20px 0;
+    font-size: 2rem;
+    color: #63b1fc;
   }
 
   .input-group {
@@ -263,6 +271,7 @@
     padding: 10px;
     border-radius: 4px;
     font-size: 1rem;
+    text-transform: uppercase;
   }
 
   input:focus {
@@ -287,12 +296,31 @@
     color: white;
   }
 
-  .status-indicator {
-    font-size: 1.1rem;
-    flex: 1;
+  /* --- The Active State Layout --- */
+  .active-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
+
+  .spacer {
+    flex: 1; /* Takes up exactly 1 unit of space on the left */
+  }
+
+  .status-indicator {
+    text-align: center;
+    font-size: 1.1rem;
+    white-space: nowrap; /* Prevents the text from wrapping weirdly */
+  }
+
+  .button-wrapper {
+    flex: 1; /* Takes up exactly 1 unit of space on the right */
+    display: flex;
+    justify-content: flex-end; /* Shoves the button to the far right edge */
+  }
+  /* ------------------------------- */
   .active-call {
-    color: #00b37e;
+    color: #63b1fc;
     font-weight: bold;
   }
 

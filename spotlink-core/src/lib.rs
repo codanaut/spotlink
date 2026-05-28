@@ -92,7 +92,7 @@ pub async fn run_engine(
         let callsign = current_callsign.as_ref().unwrap().clone();
 
         let unique_id = Utc::now().timestamp_millis();
-        let client_id = format!("spotlink_engine_{}_{}", callsign, unique_id);
+        let client_id = format!("spotlink_{}_{}", callsign, unique_id);
         let mut mqtt_options = MqttOptions::new(client_id, "mqtt.pskreporter.info", 1884);
         mqtt_options.set_keep_alive(Duration::from_secs(60));
         mqtt_options.set_transport(Transport::tls_with_default_config());
