@@ -1,0 +1,94 @@
+name: Build iOS App (Unsigned for SideStore)
+
+on:
+  workflow_dispatch: # Allows manual trigger from the Actions tab
+
+jobs:
+  build-ios:
+    name: Build Unsigned iOS IPA
+    runs-on: macos-latest
+    
+    # Crucial: Gives the workflow permission to create and overwrite releases
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'spotlink-desktop/package-lock.json'
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios
+
+      # Run cargo caching at the root since your Cargo.toml workspace is there
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: . -> target
+
+      - name: Install dependencies
+        working-directory: ./spotlink-desktop
+        run: npm install
+
+      - name: Initialize Tauri iOS project
+        working-directory: ./spotlink-desktop
+        run: npx tauri ios init
+
+      - name: Disable Code Signing in Xcode Project Configuration
+        working-directory: ./spotlink-desktop
+        run: |
+          node -e '
+            const fs = require("fs");
+            // Updated path to match the spotlink-desktop product name
+            const path = "src-tauri/gen/apple/spotlink-desktop.xcodeproj/project.pbxproj";
+            if (fs.existsSync(path)) {
+              let content = fs.readFileSync(path, "utf8");
+              content = content.replace(/buildSettings = \{/g, "buildSettings = {\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;");
+              fs.writeFileSync(path, content, "utf8");
+              console.log("Successfully patched project.pbxproj to turn off code-signing.");
+            } else {
+              console.error("Error: project.pbxproj not found at " + path);
+              process.exit(1);
+            }
+          '
+
+      - name: Build Unsigned Application Bundle via Tauri
+        working-directory: ./spotlink-desktop
+        run: npx tauri ios build
+        continue-on-error: true
+
+      - name: Package into IPA for SideStore
+        run: |
+          mkdir -p Payload
+          # Updated to look for spotlink-desktop.app
+          APP_PATH=$(find . ~/Library/Developer/Xcode/DerivedData -name "spotlink-desktop.app" -type d 2>/dev/null | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: spotlink-desktop.app bundle could not be found anywhere!"
+            exit 1
+          fi
+          echo "Found compiled app at: $APP_PATH"
+          cp -r "$APP_PATH" Payload/
+          zip -r SpotLink.ipa Payload
+
+      # Creates a release tagged "ios-latest" or overwrites the file if it already exists
+      - name: Upload IPA to GitHub Releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Checking/Creating rolling release..."
+          gh release create ios-latest \
+            --title "Latest iOS Build (SideStore)" \
+            --notes "Automated unsigned iOS build for SideStore side-loading. Refreshed on $(date)." \
+            --prerelease \
+            2>/dev/null || true
+          
+          echo "Uploading SpotLink.ipa to release..."
+          gh release upload ios-latest SpotLink.ipa --clobber
