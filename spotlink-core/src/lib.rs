@@ -111,6 +111,9 @@ pub async fn run_engine(
             continue;
         }
 
+        // Create a heartbeat that ticks every 3 seconds
+        let mut maintenance_ticker = tokio::time::interval(Duration::from_secs(3));
+
         // --- INNER LOOP: Processing Active Traffic ---
         loop {
             tokio::select! {
@@ -145,28 +148,14 @@ pub async fn run_engine(
 
                                 let now = Utc::now();
 
-                                // --- Global Inactivity Timeout Reset ---
-                                if now.signed_duration_since(last_seen_time).num_seconds() >= TIMEOUT_SECS {
-                                    heard_me.clear();
-                                    i_heard.clear();
-                                    active_matches.clear();
-                                    last_seen_time = now;
-                                    
-                                    // Send the global timeout event to the UI
-                                    let _ = event_broadcaster.send(EngineEvent::GlobalTimeout);
-                                }
-
-                                // --- Rolling Memory Garbage Collection ---
-                                heard_me.retain(|_, info| now.signed_duration_since(info.timestamp).num_seconds() < TIMEOUT_SECS);
-                                i_heard.retain(|_, info| now.signed_duration_since(info.timestamp).num_seconds() < TIMEOUT_SECS);
-                                active_matches.retain(|_, ts| now.signed_duration_since(*ts).num_seconds() < TIMEOUT_SECS);
-
                                 // --- Log State Map Tracking ---
                                 let info = StationInfo { timestamp: now, snr };
                                 if sender == callsign {
                                     heard_me.insert(receiver.to_string(), info);
+                                    last_seen_time = now;
                                 } else if receiver == callsign {
                                     i_heard.insert(sender.to_string(), info);
+                                    last_seen_time = now;
                                 }
 
                                 // --- Match Verification ---
@@ -203,6 +192,41 @@ pub async fn run_engine(
                         }
                         _ => {} 
                     }
+                }
+
+                // BRANCH C: Periodic Background Maintenance
+                _ = maintenance_ticker.tick() => {
+                    let now = Utc::now();
+
+                    // --- Global Inactivity Timeout Reset ---
+                    if now.signed_duration_since(last_seen_time).num_seconds() >= TIMEOUT_SECS {
+                        // Only send the clear event if we actually have stale data
+                        if !heard_me.is_empty() || !i_heard.is_empty() || !active_matches.is_empty() {
+                            heard_me.clear();
+                            i_heard.clear();
+                            active_matches.clear();
+                            
+                            let _ = event_broadcaster.send(EngineEvent::GlobalTimeout);
+                            let _ = event_broadcaster.send(EngineEvent::StatsUpdate(EngineStats {
+                                outgoing: 0,
+                                incoming: 0,
+                                matches: 0,
+                            }));
+                        }
+                    }
+
+                    // --- Rolling Memory Garbage Collection ---
+                    heard_me.retain(|_, info| now.signed_duration_since(info.timestamp).num_seconds() < TIMEOUT_SECS);
+                    i_heard.retain(|_, info| now.signed_duration_since(info.timestamp).num_seconds() < TIMEOUT_SECS);
+                    active_matches.retain(|_, ts| now.signed_duration_since(*ts).num_seconds() < TIMEOUT_SECS);
+
+                    // --- Broadcast Live Stats ---
+                    let stats = EngineStats {
+                        outgoing: heard_me.len(),
+                        incoming: i_heard.len(),
+                        matches: active_matches.len(),
+                    };
+                    let _ = event_broadcaster.send(EngineEvent::StatsUpdate(stats));
                 }
             }
         }
