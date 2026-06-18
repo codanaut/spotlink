@@ -52,7 +52,7 @@ jobs:
         run: |
           TARGET_DIR="src-tauri/gen/apple/Assets.xcassets/AppIcon.appiconset"
           mkdir -p "$TARGET_DIR"
-          SOURCE_ICON="src-tauri/icons/512x512.png"
+          SOURCE_ICON="src-tauri/icons/icon.png"
           
           echo "Generating all required iOS icons into $TARGET_DIR..."
           
