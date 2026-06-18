@@ -24,7 +24,6 @@
   let activeTrackingCallsign: string = "";
   let filterQuery: string = "";
   let matches: SpotLinkMatch[] = [];
-
   let unlistenMatch: (() => void) | null = null;
   let unlistenClear: (() => void) | null = null;
   let pruneInterval: ReturnType<typeof setInterval> | null = null;
@@ -132,6 +131,7 @@
           bind:value={targetCallsign}
           on:keydown={(e) => e.key === "Enter" && handleStartTracking()}
         />
+
         <div class="button-wrapper">
           <button on:click={handleStartTracking} class="btn-start">Start</button
           >
@@ -201,6 +201,7 @@
               >{new Date(match.timestamp).toLocaleTimeString()}</span
             >
           </div>
+
           <div class="card-body">
             <div class="meta-info">
               <span class="badge">{match.band}</span>
@@ -312,7 +313,8 @@
   }
 
   .spacer {
-    flex: 1; /* Takes up exactly 1 unit of space on the left */
+    flex: 1;
+    /* Takes up exactly 1 unit of space on the left */
   }
 
   .status-indicator {
@@ -322,9 +324,11 @@
   }
 
   .button-wrapper {
-    flex: 1; /* Takes up exactly 1 unit of space on the right */
+    flex: 1;
+    /* Takes up exactly 1 unit of space on the right */
     display: flex;
-    justify-content: flex-end; /* Shoves the button to the far right edge */
+    justify-content: flex-end;
+    /* Shoves the button to the far right edge */
   }
   /* ------------------------------- */
   .active-call {
@@ -438,5 +442,90 @@
     font-size: 1.8rem;
     font-weight: bold;
     color: #63b1fc;
+  }
+
+  /* ==========================================================================
+     MOBILE RESPONSIVENESS ADAPTATIONS (< 600px Viewports)
+     ========================================================================= */
+  @media (max-width: 600px) {
+    .container {
+      padding: 12px;
+      gap: 12px;
+    }
+
+    /* Stack input items vertically and space them nicely */
+    .input-group {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Input Expansion: Allows search & callsign entry to fill mobile width safely */
+    input {
+      width: 100%;
+      max-width: 200px;
+    }
+
+    .filter-panel input {
+      max-width: 100%; /* Filter spans full width for easy tapping */
+    }
+
+    /* Header controls re-flow seamlessly into an organized vertical stack */
+    .active-group {
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .spacer {
+      display: none; /* Disables desktop centering alignment override */
+    }
+
+    /* Centers both the 'Start' and 'Stop' wrappers perfectly on mobile */
+    .button-wrapper {
+      justify-content: center;
+      width: 100%;
+      flex: none;
+    }
+
+    /* Transforms rigid horizontal stats panel into a clean vertical list layout */
+    .stats-panel {
+      flex-direction: column;
+      gap: 0;
+      padding: 8px 16px;
+    }
+
+    .stat-box {
+      flex-direction: row;
+      justify-content: space-between;
+      width: 100%;
+      padding: 12px 0;
+      border-bottom: 1px solid #29292e;
+    }
+
+    .stat-box:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+    }
+
+    .stat-value {
+      font-size: 1.4rem;
+    }
+
+    /* Match Feed adjustments prevent horizontal crowding inside metrics row */
+    .card-body {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .snr-display {
+      width: 100%;
+      justify-content: space-between;
+      border-top: 1px solid #252529;
+      padding-top: 10px;
+    }
   }
 </style>
