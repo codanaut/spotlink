@@ -1,7 +1,9 @@
 {
     "bundle": {
         "targets": [
-            "rpm"
+            "deb",
+            "rpm",
+            "appimage"
         ]
     }
 }
