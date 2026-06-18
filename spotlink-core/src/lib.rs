@@ -4,6 +4,7 @@ use std::time::Duration;
 use std::collections::HashMap;
 use tokio::sync::{mpsc, broadcast};
 use rumqttc::{MqttOptions, AsyncClient, QoS, Transport, Event, Incoming};
+use std::sync::Arc;
 
 // --- DATA FROM THE FIREHOSE ---
 #[derive(Debug, Deserialize, Clone)]
@@ -95,7 +96,17 @@ pub async fn run_engine(
         let client_id = format!("spotlink_{}_{}", callsign, unique_id);
         let mut mqtt_options = MqttOptions::new(client_id, "mqtt.pskreporter.info", 1884);
         mqtt_options.set_keep_alive(Duration::from_secs(60));
-        mqtt_options.set_transport(Transport::tls_with_default_config());
+
+        let mut root_store = rustls::RootCertStore::empty();
+        root_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+
+        let client_config = rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
+            .with_safe_default_protocol_versions()
+            .unwrap()
+            .with_root_certificates(root_store)
+            .with_no_client_auth();
+
+        mqtt_options.set_transport(Transport::Tls(rumqttc::TlsConfiguration::Rustls(Arc::new(client_config))));
 
         let (client, mut eventloop) = AsyncClient::new(mqtt_options, 10);
 
