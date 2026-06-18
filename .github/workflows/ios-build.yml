@@ -2,6 +2,11 @@ name: Build iOS App (Unsigned for SideStore)
 
 on:
   workflow_dispatch: # Allows manual trigger from the Actions tab
+    inputs:
+      suffix:
+        description: 'Version Suffix (e.g., -beta, -nightly)'
+        required: true
+        default: '-beta'
 
 jobs:
   build-ios:
@@ -42,12 +47,54 @@ jobs:
         working-directory: ./spotlink-desktop
         run: npx tauri ios init
 
+      - name: Generate iOS App Icons from Desktop Icon
+        working-directory: ./spotlink-desktop
+        run: |
+          TARGET_DIR="src-tauri/gen/apple/Assets.xcassets/AppIcon.appiconset"
+          mkdir -p "$TARGET_DIR"
+          SOURCE_ICON="src-tauri/icons/512x512.png"
+          
+          echo "Generating all required iOS icons into $TARGET_DIR..."
+          
+          # 20px variants
+          sips -z 20 20   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-20x20@1x.png"
+          sips -z 40 40   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-20x20@2x.png"
+          sips -z 60 60   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-20x20@3x.png"
+          sips -z 40 40   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-20x20@2x-1.png"
+          
+          # 29px variants
+          sips -z 29 29   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-29x29@1x.png"
+          sips -z 58 58   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-29x29@2x.png"
+          sips -z 87 87   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-29x29@3x.png"
+          sips -z 58 58   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-29x29@2x-1.png"
+          
+          # 40px variants
+          sips -z 40 40   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-40x40@1x.png"
+          sips -z 80 80   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-40x40@2x.png"
+          sips -z 120 120 "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-40x40@3x.png"
+          sips -z 80 80   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-40x40@2x-1.png"
+          
+          # 60px variants
+          sips -z 120 120 "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-60x60@2x.png"
+          sips -z 180 180 "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-60x60@3x.png"
+          
+          # 76px variants
+          sips -z 76 76   "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-76x76@1x.png"
+          sips -z 152 152 "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-76x76@2x.png"
+          
+          # 83.5px variants
+          sips -z 167 167 "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-83.5x83.5@2x.png"
+          
+          # 512px @2x variant (1024x1024 App Store icon)
+          sips -z 1024 1024 "$SOURCE_ICON" --out "$TARGET_DIR/AppIcon-512@2x.png"
+          
+          echo "All iOS app icons generated successfully!"
+
       - name: Disable Code Signing in Xcode Project Configuration
         working-directory: ./spotlink-desktop
         run: |
           node -e '
             const fs = require("fs");
-            // Updated path to match the spotlink-desktop product name
             const path = "src-tauri/gen/apple/spotlink-desktop.xcodeproj/project.pbxproj";
             if (fs.existsSync(path)) {
               let content = fs.readFileSync(path, "utf8");
@@ -62,13 +109,14 @@ jobs:
 
       - name: Build Unsigned Application Bundle via Tauri
         working-directory: ./spotlink-desktop
+        env:
+          VERSION_SUFFIX: ${{ github.event.inputs.suffix }}
         run: npx tauri ios build
         continue-on-error: true
 
       - name: Package into IPA for SideStore
         run: |
           mkdir -p Payload
-          # Updated to look for spotlink-desktop.app
           APP_PATH=$(find . ~/Library/Developer/Xcode/DerivedData -name "spotlink-desktop.app" -type d 2>/dev/null | head -n 1)
           if [ -z "$APP_PATH" ]; then
             echo "Error: spotlink-desktop.app bundle could not be found anywhere!"
