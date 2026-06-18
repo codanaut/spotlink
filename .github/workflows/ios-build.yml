@@ -117,9 +117,9 @@ jobs:
       - name: Package into IPA for SideStore
         run: |
           mkdir -p Payload
-          APP_PATH=$(find . ~/Library/Developer/Xcode/DerivedData -name "spotlink-desktop.app" -type d 2>/dev/null | head -n 1)
+          APP_PATH=$(find . ~/Library/Developer/Xcode/DerivedData -name "spotlink.app" -type d 2>/dev/null | head -n 1)
           if [ -z "$APP_PATH" ]; then
-            echo "Error: spotlink-desktop.app bundle could not be found anywhere!"
+            echo "Error: spotlink.app bundle could not be found anywhere!"
             exit 1
           fi
           echo "Found compiled app at: $APP_PATH"
