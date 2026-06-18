@@ -185,7 +185,7 @@
       <div class="empty-state">
         {activeTrackingCallsign
           ? "Awaiting incoming bi-directional matches..."
-          : "Configure a callsign above to begin."}
+          : "Enter a callsign above to begin!"}
       </div>
     {:else}
       {#each filteredMatches as match}
