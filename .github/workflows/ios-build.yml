@@ -1,19 +1,14 @@
 name: Build iOS App (Unsigned for SideStore)
 
 on:
-  workflow_dispatch: # Allows manual trigger from the Actions tab
-    inputs:
-      suffix:
-        description: 'Version Suffix (e.g., -beta, -nightly)'
-        required: true
-        default: '-beta'
+  workflow_dispatch: # Allows manual trigger from the Actions tab without inputs
 
 jobs:
   build-ios:
     name: Build Unsigned iOS IPA
     runs-on: macos-latest
     
-    # Crucial: Gives the workflow permission to create and overwrite releases
+    # Gives the workflow permission to create and overwrite releases
     permissions:
       contents: write
 
@@ -95,7 +90,7 @@ jobs:
         run: |
           node -e '
             const fs = require("fs");
-            const path = "src-tauri/gen/apple/spotlink-desktop.xcodeproj/project.pbxproj";
+            const path = "src-tauri/gen/apple/SpotLink.xcodeproj/project.pbxproj";
             if (fs.existsSync(path)) {
               let content = fs.readFileSync(path, "utf8");
               content = content.replace(/buildSettings = \{/g, "buildSettings = {\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;");
@@ -109,17 +104,15 @@ jobs:
 
       - name: Build Unsigned Application Bundle via Tauri
         working-directory: ./spotlink-desktop
-        env:
-          VERSION_SUFFIX: ${{ github.event.inputs.suffix }}
         run: npx tauri ios build
         continue-on-error: true
 
       - name: Package into IPA for SideStore
         run: |
           mkdir -p Payload
-          APP_PATH=$(find . ~/Library/Developer/Xcode/DerivedData -name "spotlink.app" -type d 2>/dev/null | head -n 1)
+          APP_PATH=$(find . ~/Library/Developer/Xcode/DerivedData -name "SpotLink.app" -type d 2>/dev/null | head -n 1)
           if [ -z "$APP_PATH" ]; then
-            echo "Error: spotlink.app bundle could not be found anywhere!"
+            echo "Error: SpotLink.app bundle could not be found anywhere!"
             exit 1
           fi
           echo "Found compiled app at: $APP_PATH"
