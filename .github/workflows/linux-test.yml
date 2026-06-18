@@ -1,0 +1,63 @@
+name: Test Linux Build (RPM)
+
+on:
+  workflow_dispatch: # Allows manual trigger from the Actions tab
+
+jobs:
+  build-linux:
+    name: Build Linux RPM
+    runs-on: ubuntu-22.04
+    
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'spotlink-desktop/package-lock.json'
+
+      - name: Install system dependencies (Tauri Core)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install RPM bundling dependency
+        run: |
+          # Tauri uses 'rpm' under the hood on Debian/Ubuntu environments to package RPMs
+          sudo apt-get install -y rpm
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: . -> target
+
+      - name: Install dependencies
+        working-directory: ./spotlink-desktop
+        run: npm install
+
+      - name: Build Bundles via Tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: linux-test
+          releaseName: "Linux Test Build"
+          projectPath: ./spotlink-desktop
