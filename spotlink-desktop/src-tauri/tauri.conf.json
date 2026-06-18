@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "spotlink-desktop",
+        "title": "SpotLink",
         "width": 800,
         "height": 600
       }
