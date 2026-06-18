@@ -127,7 +127,7 @@
       <div class="input-group">
         <input
           type="text"
-          placeholder="Enter Callsign (e.g. KF0TPL)"
+          placeholder=" "
           bind:value={targetCallsign}
           on:keydown={(e) => e.key === "Enter" && handleStartTracking()}
         />
