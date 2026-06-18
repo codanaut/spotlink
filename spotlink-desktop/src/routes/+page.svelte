@@ -245,12 +245,20 @@
     gap: 15px;
   }
 
-  .control-panel,
+  .control-panel {
+    background: #1e1e24;
+    padding: 15px 20px;
+    border-radius: 8px;
+    border: 1px solid #29292e;
+  }
+
   .filter-panel {
     background: #1e1e24;
     padding: 15px 20px;
     border-radius: 8px;
     border: 1px solid #29292e;
+    display: flex;
+    justify-content: center;
   }
 
   .title {
@@ -277,6 +285,7 @@
     text-transform: uppercase;
     text-align: center;
     width: 30%;
+    box-sizing: border-box;
   }
 
   input:focus {
@@ -466,6 +475,7 @@
     }
 
     .filter-panel input {
+      width: 100%;
       max-width: 100%; /* Filter spans full width for easy tapping */
     }
 
