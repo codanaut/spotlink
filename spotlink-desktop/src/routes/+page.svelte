@@ -125,15 +125,17 @@
 
     {#if !activeTrackingCallsign}
       <div class="input-group">
+        <div class="spacer"></div>
         <input
           type="text"
           placeholder=" "
           bind:value={targetCallsign}
           on:keydown={(e) => e.key === "Enter" && handleStartTracking()}
         />
-        <button on:click={handleStartTracking} class="btn-start"
-          >Track Stream</button
-        >
+        <div class="button-wrapper">
+          <button on:click={handleStartTracking} class="btn-start">Start</button
+          >
+        </div>
       </div>
     {:else}
       <div class="active-group">
@@ -261,34 +263,40 @@
     display: flex;
     gap: 10px;
     align-items: center;
+    justify-content: center;
   }
 
   input {
-    flex: 1;
     background: #121214;
     border: 1px solid #29292e;
     color: white;
     padding: 10px;
-    border-radius: 4px;
+    border-radius: 500px;
     font-size: 1rem;
     text-transform: uppercase;
+    text-align: center;
+    width: 30%;
   }
 
   input:focus {
-    outline: 1px solid #00b37e;
+    outline: 1px solid #63b1fc;
+  }
+
+  input:hover {
+    outline: 1px solid #63b1fc;
   }
 
   button {
     padding: 10px 20px;
     border: none;
-    border-radius: 4px;
+    border-radius: 24px;
     font-weight: bold;
     cursor: pointer;
     font-size: 1rem;
   }
 
   .btn-start {
-    background-color: #00b37e;
+    background-color: #63b1fc;
     color: white;
   }
   .btn-stop {
