@@ -42,6 +42,7 @@ The beta version can be downloaded [here](https://github.com/codanaut/spotlink/r
 
 > 💡 An official version for the Apple App Store will hopefully be available down the road once I can justify paying Apple $99 a year for the developer license!
 
-### 🤖 Android Build
+### 🤖 Android & MacOS Builds
 
-Coming soon!
+Theres no reason why SpotLink shouldn't work on Android and MacOS, I just don't have a device for either to test them on.
+As soon as I get a chance to test and confirm that everything works, I'll put out an official release for each.
