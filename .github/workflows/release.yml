@@ -43,7 +43,6 @@ jobs:
           New-Item -ItemType Directory -Force -Path ./staging
           
           # Dynamic search to locate the raw standalone executable binary 
-          # (Filters out installer subfolders, dependencies, and build cache)
           $portableExe = Get-ChildItem -Path . -Filter *.exe -Recurse | Where-Object { 
             $_.FullName -like "*target*release*" -and 
             $_.FullName -notlike "*bundle*" -and 
@@ -236,6 +235,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download all compiled artifacts
         uses: actions/download-artifact@v4
         with:
@@ -245,12 +247,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Ensuring rolling latest release exists..."
-          gh release create latest \
-            --title "SpotLink Latest Build" \
-            --notes "Automated cross-platform rolling builds for Windows, Linux, and iOS. Refreshed on $(date)." \
-            --prerelease \
-            2>/dev/null || true
+          # Safe conditional check to prevent errors if the target release exists
+          if gh release view latest >/dev/null 2>&1; then
+            echo "Rolling target release 'latest' already exists. Updating release text..."
+            gh release edit latest --notes "Automated cross-platform rolling builds for Windows, Linux, and iOS. Refreshed on $(date)."
+          else
+            echo "Rolling target release 'latest' not found. Executing creation..."
+            gh release create latest \
+              --title "SpotLink Latest Build" \
+              --notes "Automated cross-platform rolling builds for Windows, Linux, and iOS. Refreshed on $(date)." \
+              --prerelease
+          fi
           
-          echo "Uploading all assets to the rolling release..."
-          find ./artifacts -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.ipa" \) -exec gh release upload latest {} --clobber \;
+          echo "Processing artifact uploads..."
+          # Pipe find selections directly into a shell loop so errors bubble up explicitly
+          find ./artifacts -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.ipa" \) | while read -r asset; do
+            echo "Uploading asset: $asset"
+            gh release upload latest "$asset" --clobber
+          done
