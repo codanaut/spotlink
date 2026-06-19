@@ -21,13 +21,24 @@ The only requirement is that you must be actively uploading your spots to PSK Re
 
 ## 💾 Downloads
 
+Try it out by downloading the latest release for your operating system from the [Releases](https://github.com/codanaut/spotlink/releases/tag/latest) page.
+
 ### 💻 Desktop App
 
-Try it out by downloading the latest release for your operating system from the [Releases](https://github.com/codanaut/spotlink/releases) page.
+Windows has an installer or a portable version available.
+
+Linux has packages for Debian/Ubuntu(.deb) and Fedora(.rpm) along with an AppImage. AUR support can be added if there's further interest.
+
 
 ### 📱 iOS Build (via SideStore)
+The iOS builds require [SideStore](https://sidestore.io/) for sideloading on your iOS device. 
 
-Head over to the [Releases](https://github.com/codanaut/spotlink/releases/tag/ios-latest) page to download the latest iOS .ipa build. You can install it on your device using [SideStore](https://sidestore.io/).
+Theres currently two iOS options available:
+
+The stable version can be downloaded [here](https://github.com/codanaut/spotlink/releases/tag/latest).
+
+The beta version can be downloaded [here](https://github.com/codanaut/spotlink/releases/tag/ios-latest).
+
 
 > 💡 An official version for the Apple App Store will hopefully be available down the road once I can justify paying Apple $99 a year for the developer license!
 
