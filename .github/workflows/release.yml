@@ -30,19 +30,22 @@ jobs:
         working-directory: ./spotlink-desktop
         run: npm install
 
-      - name: Build Bundles via Tauri
-        working-directory: ./spotlink-desktop
-        run: npx tauri build
+      - name: Build Bundles via Tauri Action
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: ./spotlink-desktop
 
       - name: Stage Windows Artifacts
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path ./staging
-          # Extract the naked application executable for the portable target
-          Copy-Item -Path ./spotlink-desktop/src-tauri/target/release/SpotLink.exe -Destination ./staging/SpotLink-portable.exe -ErrorAction SilentlyContinue
-          # Extract installers
-          Get-ChildItem -Path ./spotlink-desktop/src-tauri/target/release/bundle/nsis/*.exe -ErrorAction SilentlyContinue | Copy-Item -Destination ./staging/
-          Get-ChildItem -Path ./spotlink-desktop/src-tauri/target/release/bundle/msi/*.msi -ErrorAction SilentlyContinue | Copy-Item -Destination ./staging/
+          # Copy the raw unbundled standalone executable for the portable version
+          Get-ChildItem -Path ./target/release/SpotLink.exe | Copy-Item -Destination ./staging/SpotLink-portable.exe
+          # Recursively catch any generated installer binaries (.exe or .msi) from the bundle folder
+          Get-ChildItem -Path ./target/release/bundle/ -Filter *.exe -Recurse | Copy-Item -Destination ./staging/
+          Get-ChildItem -Path ./target/release/bundle/ -Filter *.msi -Recurse | Copy-Item -Destination ./staging/
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
@@ -94,14 +97,18 @@ jobs:
         working-directory: ./spotlink-desktop
         run: npm install
 
-      - name: Build Bundles via Tauri
-        working-directory: ./spotlink-desktop
-        run: npx tauri build
+      - name: Build Bundles via Tauri Action
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: ./spotlink-desktop
 
       - name: Stage Linux Artifacts
         run: |
           mkdir staging
-          find spotlink-desktop/src-tauri/target/release/bundle/ -type f \( -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" \) -exec cp {} staging/ \;
+          # Safely sweep the target directory recursively to extract the bundles
+          find target/release/ -type f \( -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" \) -exec cp {} staging/ \;
 
       - name: Upload Linux Artifacts
         uses: actions/upload-artifact@v4
