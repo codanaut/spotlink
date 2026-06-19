@@ -11,7 +11,7 @@ By leveraging PSK Reporter's MQTT stream, SpotLink monitors for your callsign in
 
    - Top Matches: Stations with strong signal reports—indicating a high probability of a successful QSO—are automatically marked with a star (⭐).
 
-   - Ultra-Lightweight: Designed specifically not to slow down or interfere with older machines running WSJT-X. It can be run on your radio PC or any other machine on your network.
+   - Ultra-Lightweight: Designed specifically not to slow down or interfere with older machines running WSJT-X. It can be run on your radio PC or any other machine.
 
    - Note: The goal of SpotLink isn't to replace the PSK Reporter map, but to complement it by giving you a quick, glanceable count of how many stations you hear, how many hear you, and how many matches go both ways.
 
@@ -46,3 +46,22 @@ The beta version can be downloaded [here](https://github.com/codanaut/spotlink/r
 
 Theres no reason why SpotLink shouldn't work on Android and MacOS, I just don't have a device for either to test them on.
 As soon as I get a chance to test and confirm that everything works, I'll put out an official release for each.
+
+## Future Features
+
+Bug fixes will come as needed, but I don't plan on going crazy with features since my main goal for SpotLink is to be as lightweight, fast and simple as possible.
+
+However, there is two features that I do plan on exploring:
+
+- The ability to view the incoming and outgoing callsign streams, not just the bidirectional matches. 
+- A CLI/TUI version of the app for those of us who live in the terminal.
+
+I'm also open to suggestions! Feel free to open an issue or reach out with your ideas.
+
+
+## Acknowledgements
+
+This app would not be possible without the mqtt service provided by Tom, M0LTE. If you use SpotLink (or any other app that uses the PSK Reporter MQTT stream), please consider supporting Tom's efforts to keep the service running!
+
+- [PSK Reporter MQTT](https://www.mqtt.pskreporter.info/)
+- [PSK Reporter](https://pskreporter.info/)
