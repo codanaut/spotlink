@@ -41,11 +41,28 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path ./staging
-          # Copy the raw unbundled standalone executable for the portable version
-          Get-ChildItem -Path ./target/release/SpotLink.exe | Copy-Item -Destination ./staging/SpotLink-portable.exe
-          # Recursively catch any generated installer binaries (.exe or .msi) from the bundle folder
-          Get-ChildItem -Path ./target/release/bundle/ -Filter *.exe -Recurse | Copy-Item -Destination ./staging/
-          Get-ChildItem -Path ./target/release/bundle/ -Filter *.msi -Recurse | Copy-Item -Destination ./staging/
+          
+          # Dynamic search to locate the raw standalone executable binary 
+          # (Filters out installer subfolders, dependencies, and build cache)
+          $portableExe = Get-ChildItem -Path . -Filter *.exe -Recurse | Where-Object { 
+            $_.FullName -like "*target*release*" -and 
+            $_.FullName -notlike "*bundle*" -and 
+            $_.FullName -notlike "*deps*" -and 
+            $_.FullName -notlike "*incremental*" -and 
+            $_.FullName -notlike "*build*" 
+          } | Select-Object -First 1
+
+          if ($portableExe) {
+              Copy-Item -Path $portableExe.FullName -Destination ./staging/SpotLink-portable.exe
+              Write-Host "Successfully staged portable binary from: $($portableExe.FullName)"
+          } else {
+              Write-Error "Error: Could not locate the standalone portable executable binary."
+              exit 1
+          }
+
+          # Target and extract compiled installers (.exe and .msi) from the generated bundle directories
+          Get-ChildItem -Path . -Filter *.exe -Recurse | Where-Object { $_.FullName -like "*target*release*bundle*" } | Copy-Item -Destination ./staging/
+          Get-ChildItem -Path . -Filter *.msi -Recurse | Where-Object { $_.FullName -like "*target*release*bundle*" } | Copy-Item -Destination ./staging/
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
@@ -107,7 +124,7 @@ jobs:
       - name: Stage Linux Artifacts
         run: |
           mkdir staging
-          # Safely sweep the target directory recursively to extract the bundles
+          # Recursively gathers .deb, .rpm, and .AppImage assets matching your target requirements
           find target/release/ -type f \( -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" \) -exec cp {} staging/ \;
 
       - name: Upload Linux Artifacts
